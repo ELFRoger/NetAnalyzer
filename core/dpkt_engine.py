@@ -65,9 +65,14 @@ def _http_filter(filename):
                 continue
 
             # Pull out fragment information (flags and offset all packed into off field, so use bitmasks)
+            receiver_window = tcp.win
+            time_to_live = ip.ttl
             do_not_fragment = bool(ip.off & dpkt.ip.IP_DF)
+            reset = tcp.flags
             more_fragments = bool(ip.off & dpkt.ip.IP_MF)
             fragment_offset = ip.off & dpkt.ip.IP_OFFMASK
+
+
 
             # record the info
             '''
@@ -103,6 +108,9 @@ def _http_filter(filename):
 
             http_list.append(http_data)
     return http_list
+
+def _tcp_ip_fingerprint():
+    return
 
 def dpkt_http(filename):
     return _http_filter(filename)

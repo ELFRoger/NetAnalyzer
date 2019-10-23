@@ -1,0 +1,29 @@
+mysql> select count(*) from http_raw_data;
++----------+
+| count(*) |
++----------+
+|  1914951 |
++----------+
+1 row in set (8.27 sec)
+
+mysql> select count(*) from http_raw_data where http_type = 'request';
++----------+
+| count(*) |
++----------+
+|  1063670 |
++----------+
+1 row in set (7.03 sec)
+
+
+insert into http_request (time,src,src_port,method,url,http_version,headers)
+select time,src,src_port,method,url,http_version,headers from http_raw_data where http_type='request'
+> Affected rows: 1063670
+> 时间: 174.389s
+
+insert into http_response (time,src,src_port,http_version,status,reason,headers)
+select time,src,src_port,http_version,status,reason,headers from http_raw_data where http_type='response'
+> Affected rows: 851281
+> 时间: 120.941s
+
+
+

@@ -85,7 +85,7 @@ def select_all_UA():
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
 
-    sql_statement = ("select src, headers from http_request where headers!='{}'")
+    sql_statement = ("select src, headers from http_request where headers!='{}' limit 100000")
 
     db_cursor.execute(sql_statement)
     db_conn.commit()
@@ -103,8 +103,32 @@ def select_all_UA():
 
     return UA_list
 
+def select_all_response_header():
+    db_cursor = libs.common.get_value('db_cursor')
+    db_conn = libs.common.get_value('db_conn')
+
+    sql_statement = ("select src, headers from http_response where headers!='{}'")
+
+    db_cursor.execute(sql_statement)
+    db_conn.commit()
+    res = db_cursor.fetchall()
+    header_list = []
+    for item in res:
+        header = json.loads(item[1])
+        if 'date' in header.keys():
+            header.pop('date')
+        temp = {}
+        temp['ip'] = item[0]
+        temp['header'] = str(header).replace('\'','').replace('{','').replace('}','')
+        if temp['header']:
+            header_list.append(temp)
+        else:
+            print(item)
+
+    return header_list
+
 if __name__ == '__main__':
     libs.common._init()
     libs.db.db_cursor_init()
 
-    print(select_all_UA())
+    print(select_all_response_header())

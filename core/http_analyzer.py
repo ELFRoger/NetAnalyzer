@@ -26,13 +26,18 @@ def _get_fileList(dir):
 def http_analyzer_by_dpkt(pcapFoler):
     # get all file list
     file_list = _get_fileList(pcapFoler)
+    i = 0
     for file in file_list:
-        libs.logger.log(pcapFoler + '\\' + file + ' is storing into db.....')
+        if i == 21:
+            break
+        libs.logger.log(pcapFoler + '\\' + file + ' is analyzing.....')
         http_list = dpkt_http(pcapFoler + '\\' + file)
+        libs.logger.log(pcapFoler + '\\' + file + ' is storing into db.....')
         update_originalData(http_list)
         libs.logger.log(pcapFoler + '\\' + file + 'finished')
+        i += 1
 
 
 if __name__ == '__main__':
     _init()
-    http_analyzer_by_dpkt('G:\\traffic_data\\test')
+    http_analyzer_by_dpkt('G:\\traffic_data\\divide')
