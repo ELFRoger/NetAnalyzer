@@ -2,7 +2,8 @@ import db_op
 import csv
 import config
 import json
-import libs
+import libs.common
+import libs.db
 
 
 def _init():

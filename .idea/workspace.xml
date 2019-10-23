@@ -1,17 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="99e126c1-fff3-4e30-b15d-25f3050f81dd" name="Default Changelist" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/core/response_k-means.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/core/tools.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/NetAnalyzer.iml" afterPath="$PROJECT_DIR$/.idea/NetAnalyzer.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config.py" afterPath="$PROJECT_DIR$/config.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/core/classerdemo.py" afterPath="$PROJECT_DIR$/core/classerdemo.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/core/db_op.py" afterPath="$PROJECT_DIR$/core/db_op.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/core/dpkt_engine.py" afterPath="$PROJECT_DIR$/core/dpkt_engine.py" />
-    </list>
+    <list default="true" id="99e126c1-fff3-4e30-b15d-25f3050f81dd" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
