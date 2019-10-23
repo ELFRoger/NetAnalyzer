@@ -13,3 +13,14 @@ DB_CONFIG = {
     'DB_DATABASE': 'Net_Analyzer',
     'DB_FILE': './db.sqlite3'
 }
+
+respose_header_key = ['ext', 'content-type', 'connection', 'date', 'server', 'expires',
+                      'cache-control', 'last-modified', 'set-cookie', 'accept-ranges', 'mime-version',
+                      'etag', 'x-powered-by', 'transfer-encoding', 'age', 'vary', 'pragma', 'www-authenticate',
+                      'location', 'x-frame-options', 'x-cache', 'content-language', 'via', 'x-ua-compatible',
+                      'p3p', 'content-location', 'x-aspnet-version', 'link', 'x-pingback', 'cf-ray',
+                      'access-control-allow-origin', 'access-control-allow-headers', 'access-control-allow-methods',
+                      'ratelimit-limit', 'x-alert', 'access-control-allow-credentials', 'retry-after', 'x-via',
+                      'keep-alive', 'timing-allow-origin', 'content-length']
+
+request_header_key = []

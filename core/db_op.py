@@ -1,6 +1,8 @@
 import libs.common
 import libs.db
+import config
 import json
+
 
 def update_originalData(http_list):
     db_cursor = libs.common.get_value('db_cursor')
@@ -57,6 +59,7 @@ def update_originalData(http_list):
             libs.logger.log('[%s / %s] insert db successfully' %(success, data_count))
     return
 
+
 def request_filter():
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
@@ -67,6 +70,7 @@ def request_filter():
     db_cursor.execute(sql_statement)
     db_conn.commit()
     return
+
 
 def response_filter():
     db_cursor = libs.common.get_value('db_cursor')
@@ -79,6 +83,7 @@ def response_filter():
     db_cursor.execute(sql_statement)
     db_conn.commit()
     return
+
 
 def select_all_UA():
 
@@ -103,6 +108,7 @@ def select_all_UA():
 
     return UA_list
 
+
 def select_all_response_header():
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
@@ -126,6 +132,20 @@ def select_all_response_header():
             print(item)
 
     return header_list
+
+
+def select_all_response_info():
+    db_cursor = libs.common.get_value('db_cursor')
+    db_conn = libs.common.get_value('db_conn')
+
+    sql_statement = ("select src, src_port, http_version, reason, headers, status, from http_response")
+
+    db_cursor.execute(sql_statement)
+    db_conn.commit()
+    res = db_cursor.fetchall()
+
+    return res
+
 
 if __name__ == '__main__':
     libs.common._init()

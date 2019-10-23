@@ -20,24 +20,8 @@ def _init():
     libs.db.db_cursor_init()
 
 
-def get_UA():
-    UA_info  = select_all_UA()
-    ip_list = []
-    UA_list = []
-    for item in UA_info:
-        ip_list.append(item['ip'])
-        UA_list.append(item['UA'])
-
-    for i in range(len(UA_list)):
-        if type(UA_list[i]) == list:
-            temp = ''.join(str(x) for x in UA_list[i])
-            UA_list[i] = temp
-    return ip_list, UA_list
-
-
-def get_response_header():
+def get_response_info():
     header_info = select_all_response_header()
-
     ip_list = []
     header_list = []
     for item in header_info:

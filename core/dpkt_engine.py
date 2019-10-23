@@ -2,6 +2,7 @@ import dpkt
 import datetime
 import socket
 import collections
+import json
 from dpkt.compat import compat_ord
 
 
@@ -44,23 +45,19 @@ def _http_filter(filename):
             continue
 
         ip = eth.data  # Now grab the data within the Ethernet frame (the IP packet)
-
         if isinstance(ip.data, dpkt.tcp.TCP):  # Check for TCP in the transport layer
             tcp = ip.data  # Set the TCP data
-
             # Now see if we can parse the contents as a HTTP request
             try:
                 request = dpkt.http.Request(tcp.data)
             except (dpkt.dpkt.NeedData, dpkt.dpkt.UnpackError):
                 request = ''
                 pass
-
             try:
                 response = dpkt.http.Response(tcp.data)
             except (dpkt.dpkt.NeedData, dpkt.dpkt.UnpackError):
                 response = ''
                 pass
-
             if not request and not response:
                 continue
 
@@ -109,11 +106,14 @@ def _http_filter(filename):
             http_list.append(http_data)
     return http_list
 
+
 def _tcp_ip_fingerprint():
     return
 
+
 def dpkt_http(filename):
     return _http_filter(filename)
+
 
 if __name__ == '__main__':
     dpkt_http('')
