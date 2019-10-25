@@ -139,7 +139,7 @@ def select_all_response_info():
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
 
-    sql_statement = ("select src, src_port, http_version, reason, headers, status from http_response")
+    sql_statement = ("select src, src_port, http_version, reason, status, headers from http_response")
 
     db_cursor.execute(sql_statement)
     db_conn.commit()

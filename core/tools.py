@@ -17,8 +17,9 @@ def _init():
 def save_response_feature_to_csv():
     response_info = select_all_response_info()
     response_keys = config.respose_header_key
-    first_row = ['src', 'src_port', 'http_version', 'reason', 'headers', 'status',]
+    first_row = ['src', 'src_port', 'http_version', 'reason', 'status',]
     first_row.extend(response_keys)
+    first_row.append('headers')
 
     csvFile = open("responseData.csv", "w", newline='')  # 创建csv文件
     writer = csv.writer(csvFile, dialect='excel')  # 创建写的对象
@@ -28,14 +29,9 @@ def save_response_feature_to_csv():
 
     for item in response_info:
         write_info = []
-        write_info.append(item[0])
-        write_info.append(item[1])
-        write_info.append(item[2])
-        write_info.append(item[3])
-        write_info.append(item[4])
-        write_info.append(item[5])
 
-        header = item[4]
+        write_info.append(item[4])
+        header = item[5]
         for key in response_keys:
             if key in header:
                 if key == 'content-length':
@@ -49,13 +45,15 @@ def save_response_feature_to_csv():
                             write_info.append(1)
                     except:
                         write_info.append(1)
-
-
                 else:
                     write_info.append(1)
             else:
                 write_info.append(0)
-
+        write_info.append(item[0])
+        write_info.append(item[1])
+        write_info.append(item[2])
+        write_info.append(item[3])
+        write_info.append(item[5])
         if write_info:
             writer.writerow(write_info)
         else:
