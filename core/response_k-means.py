@@ -3,10 +3,6 @@
 
 import numpy as np
 
-filePath="responseData.csv"
-#处理csv文件  usecils为你想操作的列  skiprows为你想跳过的行 =1为跳过第一行
-arr=np.loadtxt(filePath,usecols=np.arange(0,42), delimiter=",", skiprows=1)
-print(arr)
 
 # -*- coding: utf-8 -*-
 import numpy as np
@@ -117,6 +113,12 @@ def KMeansCluster(vectors, noofclusters):
         centroids = sess.run(centroids)
         assignments = sess.run(assignments)
         return centroids, assignments
+
+#filePath = "responseData.csv"
+# 处理csv文件  usecils为你想操作的列  skiprows为你想跳过的行 =1为跳过第一行
+#arr = np.loadtxt(filePath, usecols=np.arange(0, 42), delimiter=",", skiprows=1)
+
+
 ############生成测试数据###############
 sampleNo = 10;#数据数量
 mu =3
@@ -126,10 +128,12 @@ Sigma = np.array([[1, 0.5], [1.5, 3]])
 R = cholesky(Sigma)
 srcdata= np.dot(np.random.randn(sampleNo, 2), R) + mu
 plt.plot(srcdata[:,0],srcdata[:,1],'bo')
+
 ############kmeans算法计算###############
 k=4
 center,result=KMeansCluster(srcdata,k)
 print(center)
+
 ############利用seaborn画图###############
 
 res={"x":[],"y":[],"kmeans_res":[]}
