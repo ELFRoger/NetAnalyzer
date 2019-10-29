@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import sys
+sys.path.append('../')
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-import joblib
 from sklearn.cluster import KMeans
-import nltk
-from nltk.stem.snowball import SnowballStemmer
-import re
-from db_op import select_all_UA, select_all_response_header
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import Birch
+from sklearn import metrics
 import libs.common
 import libs.logger
 import libs.db
@@ -24,7 +23,7 @@ def _init():
 def get_feature():
     filePath = "responseData.csv"
     #处理csv文件  usecils为你想操作的列  skiprows为你想跳过的行 =1为跳过第一行
-    feature_arr = np.loadtxt(filePath, usecols=np.arange(0, 42), delimiter=",", skiprows=1)
+    feature_arr = np.loadtxt(filePath, usecols=np.arange(0, 41), delimiter=",", skiprows=1)[:100000]
 
     return feature_arr
 
@@ -38,19 +37,19 @@ def kmeans_classer():
     num_clusters = 50
     sse = []
     #手肘法，选k
-    for clust in range(1000,1001):
+    for clust in range(100,101):
         #clust = 100*clust
         libs.logger.log('clust ['+str(clust)+'] is begining.....')
         km_cluster = KMeans(n_clusters=clust, max_iter=100, n_init=40,
-                            init='k-means++', n_jobs=7)
+                            init='k-means++', n_jobs=5)
         km_cluster.fit(data)
         result = km_cluster.predict(data)
         sse.append(km_cluster.inertia_)
         libs.logger.log('clust [' + str(clust) + '] finish')
         libs.logger.log('clust ['+str(clust)+'] sse: ' + str(km_cluster.inertia_))
-        f = open('response_' + str(clust) +'.txt', 'w')
+        f = open('response_all_no_length' + str(clust) +'.txt', 'w')
         for i in range(len(result)):
-            info = str(result[i])
+            info = str(result[i]) + '\n'
             f.write(info)
         f.close()
 
@@ -108,5 +107,54 @@ def kmeans_classer():
     #km_cluster = joblib.load('km_cluster_fit_result.pkl')
 
 
+def hierarchical_classer():
+    data = get_feature()
+    libs.logger.log(data)
+    libs.logger.log('hierarchical cluster begining......')
+    sse = []
+    for clust in range(100, 101):
+        libs.logger.log('clust [' + str(clust) + '] is begining.....')
+        # affinity：距离计算公式：{eucidean,l1,l2,cosine,manhattan,precomputed}
+        # memory：是否要缓冲；
+        # connectivity：是否设定connectivity matrix;
+        # compute_full_tree：是否要进行完全聚类；
+        # linkage：进行聚类的标准：{ward,complete,average}
+        agglomerative_cluster = AgglomerativeClustering(n_clusters=clust, memory=None, connectivity=None, affinity='l1',
+                                                        compute_full_tree='auto', linkage='average', )
+        result = agglomerative_cluster.fit_predict(data)
+        #sse.append(agglomerative_cluster.inertia_)
+
+        f = open('response_hierarchical_1w_' + str(clust) + '.txt', 'w')
+        for i in range(len(result)):
+            info = str(result[i])
+            f.write(info)
+        f.close()
+        libs.logger.log('clust [' + str(clust) + '] finish')
+        libs.logger.log(result)
+        #libs.logger.log('clust [' + str(clust) + '] sse: ' + str(agglomerative_cluster.inertia_))
+
+
+def birch_classer():
+    data = get_feature()
+    libs.logger.log(data)
+    libs.logger.log('birch cluster begining......')
+    sse = []
+    for clust in range(100, 101):
+        libs.logger.log('clust [' + str(clust) + '] is begining.....')
+        birch_cluster = Birch(n_clusters=clust, )
+        result = birch_cluster.fit_predict(data)
+
+        calinski_harabasz_ccore = metrics.calinski_harabaz_score(data, result)
+
+        f = open('response_birch_10w_' + str(clust) + '.txt', 'w')
+        for i in range(len(result)):
+            info = str(result[i])+'\n'
+            f.write(info)
+        f.write('calinski_harabasz_ccore:'+ str(calinski_harabasz_ccore))
+        f.close()
+        libs.logger.log('clust [' + str(clust) + '] finish' )
+        libs.logger.log('calinski_harabasz_ccore: ' + str(calinski_harabasz_ccore))
+        libs.logger.log(result)
+
 _init()
-kmeans_classer()
+birch_classer()
