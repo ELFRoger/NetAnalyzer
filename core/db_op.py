@@ -86,12 +86,12 @@ def response_filter():
     return
 
 
-def select_all_UA():
+def select_all_UA(num):
 
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
 
-    sql_statement = ("select src, headers from http_request where headers!='{}' limit 100000")
+    sql_statement = ("select src, headers from http_request where headers!='{}' limit %s"%num)
 
     db_cursor.execute(sql_statement)
     db_conn.commit()
