@@ -20,7 +20,7 @@ class CosineMeans(KMeans):
 
     def fit(self, X, y=None):
         random_state = check_random_state(self.random_state)
-        X = self._check_fit_data(X)
+        #X = self._check_fit_data(X)
 
         # Init CosineMeans
         if (isinstance(self.init, np.ndarray)):

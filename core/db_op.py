@@ -61,6 +61,42 @@ def update_originalData(http_list):
     return
 
 
+def update_fingerprintData(fingerprint_list):
+    db_cursor = libs.common.get_value('db_cursor')
+    db_conn = libs.common.get_value('db_conn')
+
+    data_count = len(fingerprint_list)
+    count = 0
+    success = 0
+    param = []
+    for fingerprint in fingerprint_list:
+        '''
+        sql_statement = ('INSERT INTO http_raw_data'
+                        '(`time`, `src`, `dst`, `src_port`, `dst_port`, `http_type`, `method`, `url`, '
+                        '`http_version`, `status`, `reason`, `headers`, `body` )'
+                        'SELECT %s AS f1, %s AS f2, %s AS f3, %s AS f4, %s AS f5, %s AS f6, %s AS f7, '
+                        '%s AS f8, %s AS f9, %s AS f10, %s AS f11, %s AS f12, %s AS f13 '
+                        'WHERE NOT EXISTS'
+                        '(SELECT * FROM http_raw_data WHERE time=%s AND src=%s AND dst=%s LIMIT 1)')
+        '''
+        sql_statement = ('INSERT INTO tcpip_fingerprint'
+                        '(`time`, `src`, `src_port`,`syn_len`, `win`, `ttl`, `df`, `rst`, `mss` )'
+                        'VALUE (%s, %s, %s, %s, %s, %s, %s, %s, %s)')
+
+        count += 1
+        success += 1
+        param.append([str(info) for info in fingerprint])
+        # every 1000 data commit once
+        if count == 1000 or data_count == success:
+            print(param)
+            db_cursor.executemany(sql_statement, param)
+            db_conn.commit()
+            count = 0
+            param = []
+            libs.logger.log('[%s / %s] insert db successfully' %(success, data_count))
+    return
+
+
 def request_filter():
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
@@ -91,7 +127,10 @@ def select_all_UA(num):
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
 
-    sql_statement = ("select src, headers from http_request where headers!='{}' limit %s"%num)
+    if num:
+        sql_statement = ("select src, headers from http_request where headers!='{}' limit %s"%num)
+    else:
+        sql_statement = ("select src, headers from http_request where headers!='{}' ")
 
     db_cursor.execute(sql_statement)
     db_conn.commit()

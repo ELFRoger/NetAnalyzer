@@ -10,10 +10,12 @@ from numpy.linalg import cholesky
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-import tensorflow as tf
 from random import choice, shuffle
 from numpy import array
 ############Sachin Joglekar的基于tensorflow写的一个kmeans模板###############
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+
 def KMeansCluster(vectors, noofclusters):
     """
     K-Means Clustering using TensorFlow.
@@ -60,7 +62,7 @@ def KMeansCluster(vectors, noofclusters):
         ##用于计算欧几里得距离的节点
         v1 = tf.placeholder("float", [dim])
         v2 = tf.placeholder("float", [dim])
-        euclid_dist = tf.sqrt(tf.reduce_sum(tf.pow(tf.sub(
+        euclid_dist = tf.sqrt(tf.reduce_sum(tf.pow(tf.subtract(
             v1, v2), 2)))
         ##这个OP会决定应该将向量归属到哪个节点
         ##基于向量到中心点的欧几里得距离
@@ -114,13 +116,13 @@ def KMeansCluster(vectors, noofclusters):
         assignments = sess.run(assignments)
         return centroids, assignments
 
-#filePath = "responseData.csv"
+filePath = "responseData.csv"
 # 处理csv文件  usecils为你想操作的列  skiprows为你想跳过的行 =1为跳过第一行
-#arr = np.loadtxt(filePath, usecols=np.arange(0, 42), delimiter=",", skiprows=1)
+arr = np.loadtxt(filePath, usecols=np.arange(0, 42), delimiter=",", skiprows=1)
 
 
 ############生成测试数据###############
-sampleNo = 10;#数据数量
+sampleNo = 100;#数据数量
 mu =3
 # 二维正态分布
 mu = np.array([[1, 5]])
@@ -130,12 +132,17 @@ srcdata= np.dot(np.random.randn(sampleNo, 2), R) + mu
 plt.plot(srcdata[:,0],srcdata[:,1],'bo')
 
 ############kmeans算法计算###############
-k=4
-center,result=KMeansCluster(srcdata,k)
+k=10
+center,result=KMeansCluster(arr,k)
 print(center)
+f = open('response' + str(k) +'.txt', 'w')
+for i in range(len(result)):
+    info = str(result[i]) + '\n'
+    f.write(info)
+f.close()
 
 ############利用seaborn画图###############
-
+'''
 res={"x":[],"y":[],"kmeans_res":[]}
 for i in range(len(result)):
     res["x"].append(srcdata[i][0])
@@ -144,3 +151,4 @@ for i in range(len(result)):
 pd_res=pd.DataFrame(res)
 sns.lmplot("x","y",data=pd_res,fit_reg=False,size=5,hue="kmeans_res")
 plt.show()
+'''

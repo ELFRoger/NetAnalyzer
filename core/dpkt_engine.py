@@ -3,6 +3,7 @@ import datetime
 import socket
 import collections
 import json
+import struct
 from dpkt.compat import compat_ord
 
 
@@ -107,12 +108,50 @@ def _http_filter(filename):
     return http_list
 
 
-def _tcp_ip_fingerprint():
-    return
+def _get_message_segment_size (options ) :
+    """get the maximum segment size from the options list"""
+    options_list = dpkt.tcp.parse_opts ( options )
+    for option in options_list :
+        if option[0] == 2 :
+# The MSS is a 16 bit number.  Look at RFC 793 http://www.rfc-editor.org/rfc/rfc793.txt page 17.  dpkt decodes it as a 16
+# bit number.  An MSS is never going to be bigger than 65496 bytes.
+# The most common value is 1460 bytes (IPv4) which 0x05b4 or 1440 bytes (IPv6) which is 0x05a0.
+            mss = struct.unpack(">H", option[1])
+            return mss
+
+
+def _tcp_ip_fingerprint(filename):
+    file = open(filename, 'rb')
+    pcap = dpkt.pcap.Reader(file)
+    tcp_ip_fingerprint = []
+    for ts, pkt in pcap:
+        eth = dpkt.ethernet.Ethernet(pkt)
+        ip = eth.data
+        tcp = ip.data
+        if isinstance(ip.data, dpkt.tcp.TCP):
+            if (tcp.flags & dpkt.tcp.TH_SYN):
+                syn_len = len(ip)
+                win = tcp.win
+                ttl = ip.ttl
+                df = 1 if bool(ip.off & dpkt.ip.IP_DF) else 0
+                rst = 1 if bool(tcp.flags & dpkt.tcp.TH_RST) else 0
+                get_mss = _get_message_segment_size(tcp.opts)
+                if get_mss:
+                    mss = get_mss[0]
+                else:
+                    mss = 0
+                fingerprint = [ts, inet_to_str(ip.src), tcp.sport, syn_len, win, ttl, df, rst, mss]
+                tcp_ip_fingerprint.append(fingerprint)
+
+    return tcp_ip_fingerprint
 
 
 def dpkt_http(filename):
     return _http_filter(filename)
+
+
+def dpkt_tcpip_fingerprint(filename):
+    return _tcp_ip_fingerprint(filename)
 
 
 if __name__ == '__main__':

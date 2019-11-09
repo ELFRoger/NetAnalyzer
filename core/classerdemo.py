@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import sys
+sys.path.append('../')
 from sklearn.feature_extraction.text import TfidfVectorizer
-import joblib
 from sklearn.cluster import KMeans
 import nltk
 import re
-from db_op import select_all_UA, select_all_response_header
+from core.db_op import select_all_UA, select_all_response_header
 import libs.common
 import libs.logger
 import libs.db
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
-import cosion_kmeans
+import core.cosion_kmeans
 
 
 def _init():
@@ -157,7 +157,7 @@ def DBscan_classer(original_info, ip_list):
 
 
 def cosion_kmeans(original_info,ip_list,n_clust):
-    cluster = cosion_kmeans.CosineMeans()
+    cluster = core.cosion_kmeans.CosineMeans()
     cluster.set_n_cluster(n_clust)
 
     tfidf_vectorizer = TfidfVectorizer(tokenizer=tokenize_only, lowercase=False)
@@ -168,24 +168,23 @@ def cosion_kmeans(original_info,ip_list,n_clust):
     #log
     libs.logger.log("word feature length: {}".format(len(word)))
     libs.logger.log(word)
-    libs.logger.log('k-means begining......')
+    libs.logger.log('cosion k-means begining......'+str(n_clust))
     #fit and predict
     cluster.fit(tfidf_matrix)
     result = cluster.predict(tfidf_matrix)
-    sse = cluster.inertia_
-    libs.logger.log('k-means finished sse:' + str(sse))
-    f = open('result_cosion_' + str(n_clust) + '.txt', 'w')
+    #sse = cluster.inertia_
+    libs.logger.log('cosion k-means finished')
+    f = open('result_cosion_10w_' + str(n_clust) + '.txt', 'w')
     for i in range(len(original_info)):
         info = str(result[i]) + '\t' + ip_list[i] + '\t' + original_info[i] + '\n'
         f.write(info)
-    f.write(str(sse))
     f.close()
 
 
 _init()
-ip_list, original_info = get_UA(100000)
+ip_list, original_info = get_UA(num=100000)
 #kmeans_classer(original_info, ip_list)
-cosion_kmeans(original_info, ip_list, 100)
+cosion_kmeans(original_info, ip_list, 1500)
 '''
 
 sse = [219456.88241477526, 210344.6742609666, 202510.30251572074, 193877.9982028553, 190193.06528536972, 185167.62407510882, 181378.35124433014, 176109.8874959115, 173725.72286034783, 169918.22260482085,
