@@ -4,15 +4,18 @@ import sys
 sys.path.append('../')
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
+from sklearn.externals import joblib
 import nltk
 import re
 from core.db_op import select_all_UA, select_all_response_header
 import libs.common
 import libs.logger
 import libs.db
+import config
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import core.cosion_kmeans
+
 
 
 def _init():
@@ -141,8 +144,8 @@ def kmeans_classer(original_info,ip_list):
     服务器上面有20个CPU可以开40个进程，最终只会开10个进程
     '''
 
-    #joblib.dump(tfidf_vectorizer, 'tfidf_fit_result.pkl')
-    #joblib.dump(km_cluster, 'km_cluster_fit_result.pkl')
+    joblib.dump(tfidf_vectorizer, config.MODEL_PATH + 'ua_tfidf_result.pkl')
+    joblib.dump(km_cluster, config.MODEL_PATH + 'ua_km_cluster_fit_result.pkl')
     #程序下一次则可以直接load
     #tfidf_vectorizer = joblib.load('tfidf_fit_result.pkl')
     #km_cluster = joblib.load('km_cluster_fit_result.pkl')

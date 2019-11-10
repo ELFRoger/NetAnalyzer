@@ -24,3 +24,5 @@ respose_header_key = ['ext', 'content-type', 'connection', 'date', 'server', 'ex
                       'keep-alive', 'timing-allow-origin', 'content-length']
 
 request_header_key = []
+
+MODEL_PATH = '../models/'
