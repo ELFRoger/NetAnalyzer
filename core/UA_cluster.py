@@ -53,7 +53,6 @@ def get_response_header():
 def tokenize_only(text):
     #首先分句，接着分词，而标点也会作为词例存在
     tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
-
     filtered_tokens=[]
     #过滤所有不含字母的词例（例如：数字、纯标点）
     for token in tokens:
@@ -89,6 +88,12 @@ def kmeans_classer(original_info,ip_list):
         km_cluster.fit(tfidf_matrix)
         result = km_cluster.predict(tfidf_matrix)     # 返回各自文本的所被分配到的类索引
         sse.append(km_cluster.inertia_)
+        #store model
+        joblib.dump(tfidf_vectorizer, config.MODEL_PATH + 'ua_tfidf_result.pkl')
+        joblib.dump(km_cluster, config.MODEL_PATH + 'ua_km_cluster_fit_result.pkl')
+        # 程序下一次则可以直接load
+        # tfidf_vectorizer = joblib.load('tfidf_fit_result.pkl')
+        # km_cluster = joblib.load('km_cluster_fit_result.pkl')
         libs.logger.log('clust [' + str(clust) + '] finish')
         libs.logger.log('clust ['+str(clust)+'] sse: ' + str(km_cluster.inertia_))
         f = open('result_10w_' + str(clust) +'.txt', 'w')
@@ -96,6 +101,8 @@ def kmeans_classer(original_info,ip_list):
             info = str(result[i]) + '\t' + ip_list[i] + '\t' + original_info[i] + '\n'
             f.write(info)
         f.close()
+
+
 
     print("Predicting result: ", result)
 
@@ -144,12 +151,6 @@ def kmeans_classer(original_info,ip_list):
     服务器上面有20个CPU可以开40个进程，最终只会开10个进程
     '''
 
-    joblib.dump(tfidf_vectorizer, config.MODEL_PATH + 'ua_tfidf_result.pkl')
-    joblib.dump(km_cluster, config.MODEL_PATH + 'ua_km_cluster_fit_result.pkl')
-    #程序下一次则可以直接load
-    #tfidf_vectorizer = joblib.load('tfidf_fit_result.pkl')
-    #km_cluster = joblib.load('km_cluster_fit_result.pkl')
-
 
 def DBscan_classer(original_info, ip_list):
     tfidf_vectorizer = TfidfVectorizer(tokenizer=tokenize_only, lowercase=False)
@@ -175,7 +176,10 @@ def cosion_kmeans(original_info,ip_list,n_clust):
     #fit and predict
     cluster.fit(tfidf_matrix)
     result = cluster.predict(tfidf_matrix)
-    #sse = cluster.inertia_
+
+    #store model
+    joblib.dump(tfidf_vectorizer, config.MODEL_PATH + 'ua_tfidf_cosion_result.pkl')
+    joblib.dump(cluster, config.MODEL_PATH + 'ua_cosion_km_cluster_fit_result.pkl')
     libs.logger.log('cosion k-means finished')
     f = open('result_cosion_10w_' + str(n_clust) + '.txt', 'w')
     for i in range(len(original_info)):

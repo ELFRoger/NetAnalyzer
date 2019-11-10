@@ -7,9 +7,11 @@ from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import Birch
 from sklearn import metrics
+from sklearn.externals import joblib
 import libs.common
 import libs.logger
 import libs.db
+import config
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import numpy as np
@@ -23,7 +25,7 @@ def _init():
 
 def get_feature():
     filePath = "fingerprint.csv"
-    feature_arr = np.loadtxt(filePath, usecols=np.arange(3, 9), delimiter=",", skiprows=1)[:200000]
+    feature_arr = np.loadtxt(filePath, usecols=np.arange(3, 9), delimiter=",", skiprows=1)[:10000]
     #处理csv文件  usecils为你想操作的列  skiprows为你想跳过的行 =1为跳过第一行
 
     return feature_arr
@@ -44,6 +46,9 @@ def kmeans_classer():
         km_cluster = KMeans(n_clusters=clust, max_iter=100, n_init=40,
                             init='k-means++', n_jobs=3)
         km_cluster.fit(data)
+        # store model
+        joblib.dump(km_cluster, config.MODEL_PATH + 'fingerprint_km_cluster_fit_result.pkl')
+
         result = km_cluster.predict(data)
         sse.append(km_cluster.inertia_)
         libs.logger.log('clust [' + str(clust) + '] finish')
@@ -55,7 +60,7 @@ def kmeans_classer():
         print(result_)
         with open('fingerprint.csv') as csvin:
             readfile = csv.reader(csvin, delimiter=',')
-            with open('fingerprint_k-means_20w_'+str(clust)+'.csv', 'w') as csvout:
+            with open('fingerprint_k-means_1w_'+str(clust)+'.csv', 'w') as csvout:
                 writefile = csv.writer(csvout, delimiter=',', lineterminator='\n')
                 for row, res in zip(readfile, result_):
                     row.extend([res])
@@ -113,6 +118,39 @@ def kmeans_classer():
     #tfidf_vectorizer = joblib.load('tfidf_fit_result.pkl')
     #km_cluster = joblib.load('km_cluster_fit_result.pkl')
 
+def cosion_kmeans():
+    n_clust = 300
+    cosion_cluster = cosion_kmeans.CosineMeans()
+    cosion_cluster.set_n_cluster(n_clust)
+
+    # 需要进行聚类的数据集
+    data = get_feature()
+    libs.logger.log(data)
+    libs.logger.log('k-means begining......')
+    num_clusters = 300
+    sse = []
+
+    #log
+    libs.logger.log('cosion k-means begining......'+str(n_clust))
+    #fit and predict
+    cosion_cluster.fit(data)
+    result = cosion_cluster.predict(data)
+
+    #store model
+    joblib.dump(cosion_cluster, config.MODEL_PATH + 'fingerprint_cosion_km_cluster_fit_result.pkl')
+    libs.logger.log('cosion k-means finished')
+
+    print("Predicting result: ", result)
+    result_ = list(result)
+    result_.insert(0, 'k-means-' + str(n_clust))
+    print(result_)
+    with open('fingerprint.csv') as csvin:
+        readfile = csv.reader(csvin, delimiter=',')
+        with open('fingerprint_k-means_1w_' + str(n_clust) + '.csv', 'w') as csvout:
+            writefile = csv.writer(csvout, delimiter=',', lineterminator='\n')
+            for row, res in zip(readfile, result_):
+                row.extend([res])
+                writefile.writerow(row)
 
 def hierarchical_classer():
     data = get_feature()
@@ -129,6 +167,9 @@ def hierarchical_classer():
         agglomerative_cluster = AgglomerativeClustering(n_clusters=clust, memory=None, connectivity=None, affinity='l1',
                                                         compute_full_tree='auto', linkage='average', )
         result = agglomerative_cluster.fit_predict(data)
+        # store model
+        joblib.dump(agglomerative_cluster, config.MODEL_PATH + 'fingerprint_hier_cluster_fit_result.pkl')
+
         #sse.append(agglomerative_cluster.inertia_)
 
         f = open('response_hierarchical_1w_' + str(clust) + '.txt', 'w')
@@ -150,6 +191,9 @@ def birch_classer():
         libs.logger.log('clust [' + str(clust) + '] is begining.....')
         birch_cluster = Birch(n_clusters=clust, )
         result = birch_cluster.fit_predict(data)
+
+        # store model
+        joblib.dump(birch_cluster, config.MODEL_PATH + 'fingerprint_birch_cluster_fit_result.pkl')
 
         calinski_harabasz_ccore = metrics.calinski_harabaz_score(data, result)
 
