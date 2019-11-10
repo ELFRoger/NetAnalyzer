@@ -13,7 +13,7 @@ import libs.db
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import numpy as np
-import pandas as pd
+import csv
 
 
 def _init():
@@ -23,7 +23,7 @@ def _init():
 
 def get_feature():
     filePath = "fingerprint.csv"
-    feature_arr = np.loadtxt(filePath, usecols=np.arange(3, 9), delimiter=",", skiprows=1)
+    feature_arr = np.loadtxt(filePath, usecols=np.arange(3, 9), delimiter=",", skiprows=1)[:200000]
     #处理csv文件  usecils为你想操作的列  skiprows为你想跳过的行 =1为跳过第一行
 
     return feature_arr
@@ -42,22 +42,29 @@ def kmeans_classer():
         #clust = 100*clust
         libs.logger.log('clust ['+str(clust)+'] is begining.....')
         km_cluster = KMeans(n_clusters=clust, max_iter=100, n_init=40,
-                            init='k-means++', n_jobs=5)
+                            init='k-means++', n_jobs=3)
         km_cluster.fit(data)
         result = km_cluster.predict(data)
         sse.append(km_cluster.inertia_)
         libs.logger.log('clust [' + str(clust) + '] finish')
         libs.logger.log('clust ['+str(clust)+'] sse: ' + str(km_cluster.inertia_))
 
-        file = pd.read_csv(r'fingerprint.csv')
-        file['k-means-'+str(clust)] = result  # 设置列名字
-        file.to_csv(r"fingerprint.csv", mode='a', index=False)
+        print("Predicting result: ", result)
+        result_ = list(result)
+        result_.insert(0,'k-means-'+str(clust))
+        print(result_)
+        with open('fingerprint.csv') as csvin:
+            readfile = csv.reader(csvin, delimiter=',')
+            with open('fingerprint_k-means_20w_'+str(clust)+'.csv', 'w') as csvout:
+                writefile = csv.writer(csvout, delimiter=',', lineterminator='\n')
+                for row, res in zip(readfile, result_):
+                    row.extend([res])
+                    writefile.writerow(row)
 
-    print("Predicting result: ", result)
 
     '''
         6、可视化
-    '''
+    
     # 使用T-SNE算法，对权重进行降维，准确度比PCA算法高，但是耗时长
     tsne = TSNE(n_components=2)
     decomposition_data = tsne.fit_transform(data)
@@ -77,8 +84,8 @@ def kmeans_classer():
     # plt.show()
     plt.savefig('./sample.png', aspect=1)
 
-    '''
-    '''
+    
+    
 
     print(sse)
     sse = [219456.88241477526, 210344.6742609666, 202510.30251572074, 193877.9982028553, 190193.06528536972, 185167.62407510882, 181378.35124433014, 176109.8874959115, 173725.72286034783, 169918.22260482085, 163231.54861425093, 162948.43114660977, 158810.5280173204, 155072.52220775714, 154264.30686423107, 151203.47277052913, 148986.94957191622, 145565.20444679252, 143292.76061348701, 141897.00501520524]
@@ -89,12 +96,12 @@ def kmeans_classer():
     plt.plot(X,sse,'o-')
     plt.savefig('./sse.png')
     plt.show()
-    '''
+    
     n_clusters: 指定K的值
     max_iter: 对于单次初始值计算的最大迭代次数
     n_init: 重新选择初始值的次数
     init: 制定初始值选择的算法
-    n_jobs: 进程个数，为-1的时候是指默认跑满CPU
+    n_jobs: 进程个数,为-1的时候是指默认跑满CPU
     注意，这个对于单个初始值的计算始终只会使用单进程计算，
     并行计算只是针对与不同初始值的计算。比如n_init=10，n_jobs=40, 
     服务器上面有20个CPU可以开40个进程，最终只会开10个进程
