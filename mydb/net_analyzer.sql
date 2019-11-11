@@ -42,16 +42,20 @@ create table HTTP_REQUEST(
 )DEFAULT CHARSET=utf8mb4  COLLATE utf8mb4_general_ci;
 
 
-DROP table IF EXISTS HTTP_RESPONSE;
-create table HTTP_RESPONSE(
+DROP table IF EXISTS TCPIP_FINGERPRINT;
+create table TCPIP_FINGERPRINT(
     id INT PRIMARY KEY AUTO_INCREMENT,      # serial number for no request
     time varchar(100) NOT NULL,             # log the time
     src varchar(20) NOT NULL,               # log the source of this packet
     src_port varchar(20) NOT NULL,          # log the source port of this packet
-    http_version varchar(20) NOT NULL,      # log the version of the http protocol
-    status varchar(20) NOT NULL,            # log the return status, 200 404 etc.
-    reason varchar(255) NOT NULL,           # log the reason of return status
-    headers TEXT NOT NULL                   # log the header of the packet
+    syn_len varchar(20) NOT NULL,           # syn packet length
+    win varchar(20) NOT NULL,               # log the win in syn packet
+    ttl varchar(20) NOT NULL,               # log the ttl of syn packet
+    df varchar(20) NOT NULL,                # log the df of syn packet
+    rst varchar(20) NOT NULL,               # log the rst of syn packet
+    mss varchar(20) NOT NULL,               # log the mss of syn packet
 )DEFAULT CHARSET=utf8mb4  COLLATE utf8mb4_general_ci;
+
+
 
 

@@ -25,4 +25,4 @@ respose_header_key = ['ext', 'content-type', 'connection', 'date', 'server', 'ex
 
 request_header_key = []
 
-MODEL_PATH = '../models/'
+MODEL_PATH = 'F:/models/'
