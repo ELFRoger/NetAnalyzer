@@ -3,7 +3,7 @@
 import sys
 sys.path.append('../')
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans,DBSCAN
 import joblib
 import nltk
 import re
@@ -83,14 +83,24 @@ def kmeans_classer(original_info,ip_list):
     for clust in range(1000,1001):
         #clust = 100*clust
         libs.logger.log('clust ['+str(clust)+'] is begining.....')
+        '''
+            n_clusters: 指定K的值
+            max_iter: 对于单次初始值计算的最大迭代次数
+            n_init: 重新选择初始值的次数
+            init: 制定初始值选择的算法
+            n_jobs: 进程个数，为-1的时候是指默认跑满CPU
+            注意，这个对于单个初始值的计算始终只会使用单进程计算，
+            并行计算只是针对与不同初始值的计算。比如n_init=10，n_jobs=40, 
+            服务器上面有20个CPU可以开40个进程，最终只会开10个进程
+        '''
         km_cluster = KMeans(n_clusters=clust, max_iter=100, n_init=40,
                             init='k-means++', n_jobs=7)
         km_cluster.fit(tfidf_matrix)
         result = km_cluster.predict(tfidf_matrix)     # 返回各自文本的所被分配到的类索引
         sse.append(km_cluster.inertia_)
         #store model
-        joblib.dump(tfidf_vectorizer, config.MODEL_PATH + 'ua_tfidf_result.pkl')
-        joblib.dump(km_cluster, config.MODEL_PATH + 'ua_km_cluster_fit_result.pkl')
+        joblib.dump(tfidf_vectorizer, config.MODEL_PATH + 'banner_ua_tfidf_result.pkl')
+        joblib.dump(km_cluster, config.MODEL_PATH + 'banner_ua_km_cluster_fit_result.pkl')
         # 程序下一次则可以直接load
         # tfidf_vectorizer = joblib.load('tfidf_fit_result.pkl')
         # km_cluster = joblib.load('km_cluster_fit_result.pkl')
@@ -102,30 +112,32 @@ def kmeans_classer(original_info,ip_list):
             f.write(info)
         f.close()
 
+        print("Predicting result: ", result)
 
-    print("Predicting result: ", result)
+        '''
+            6、可视化
+        '''
+        # 使用T-SNE算法，对权重进行降维，准确度比PCA算法高，但是耗时长
+        tsne = TSNE(n_components=2)
+        decomposition_data = tsne.fit_transform(tfidf_weight)
 
-    '''
-        6、可视化
-    '''
-    # 使用T-SNE算法，对权重进行降维，准确度比PCA算法高，但是耗时长
-    tsne = TSNE(n_components=2)
-    decomposition_data = tsne.fit_transform(tfidf_weight)
+        x = []
+        y = []
 
-    x = []
-    y = []
+        for i in decomposition_data:
+            x.append(i[0])
+            y.append(i[1])
 
-    for i in decomposition_data:
-        x.append(i[0])
-        y.append(i[1])
+        fig = plt.figure(figsize=(10, 10))
+        ax = plt.axes()
+        plt.scatter(x, y, c=km_cluster.labels_, marker="x")
+        plt.xticks(())
+        plt.yticks(())
+        # plt.show()
+        plt.savefig('./sample.png', aspect=1)
 
-    fig = plt.figure(figsize=(10, 10))
-    ax = plt.axes()
-    plt.scatter(x, y, c=km_cluster.labels_, marker="x")
-    plt.xticks(())
-    plt.yticks(())
-    # plt.show()
-    plt.savefig('./sample.png', aspect=1)
+
+
 
     '''
     '''
@@ -139,24 +151,27 @@ def kmeans_classer(original_info,ip_list):
     plt.plot(X,sse,'o-')
     plt.savefig('./sse.png')
     plt.show()
-    '''
-    n_clusters: 指定K的值
-    max_iter: 对于单次初始值计算的最大迭代次数
-    n_init: 重新选择初始值的次数
-    init: 制定初始值选择的算法
-    n_jobs: 进程个数，为-1的时候是指默认跑满CPU
-    注意，这个对于单个初始值的计算始终只会使用单进程计算，
-    并行计算只是针对与不同初始值的计算。比如n_init=10，n_jobs=40, 
-    服务器上面有20个CPU可以开40个进程，最终只会开10个进程
-    '''
+
 
 
 def DBscan_classer(original_info, ip_list):
     tfidf_vectorizer = TfidfVectorizer(tokenizer=tokenize_only, lowercase=False)
-    tfidf_matrix = tfidf_vectorizer.fit_transform(original_info)
-    libs.logger.log('DBSCAN begining......')
 
-    return
+    # 需要进行聚类的文本集
+    tfidf_matrix = tfidf_vectorizer.fit_transform(original_info)
+    libs.logger.log('DBscan begining DBscan begining............')
+    libs.logger.log(type(tfidf_matrix))
+    DBscan = DBSCAN(eps=0.95, min_samples=3)
+    # DBscan = DBscan.k_dist_plot(data=tfidf_matrix)
+    print(tfidf_matrix)
+    DBscan = DBscan.fit(tfidf_matrix)
+    result = DBscan.labels_
+    libs.logger.log(result)
+    f = open('result_dbscan_' + '0.95_3_10w' + '.txt', 'w')
+    for i in range(len(original_info)):
+        info = str(result[i]) + '\t' + ip_list[i] + '\t' + original_info[i] + '\n'
+        f.write(info)
+
 
 
 def cosion_kmeans(original_info,ip_list,n_clust):
@@ -167,7 +182,7 @@ def cosion_kmeans(original_info,ip_list,n_clust):
     # 需要进行聚类的文本集
     tfidf_matrix = tfidf_vectorizer.fit_transform(original_info)
     word = tfidf_vectorizer.get_feature_names()
-    tfidf_weight = tfidf_matrix.toarray()
+    #tfidf_weight = tfidf_matrix.toarray()
     #log
     libs.logger.log("word feature length: {}".format(len(word)))
     libs.logger.log(word)
@@ -200,8 +215,9 @@ def ua_do_clust(model):
         libs.logger.log('ua_cluster no [%s] type cluster, we has k-means cosion_k-means DBScan type'.format(model))
     return
 
-
-#kmeans_classer(original_info, ip_list)
+_init()
+ip_list, original_info = get_UA()
+kmeans_classer(original_info, ip_list)
 
 '''
 

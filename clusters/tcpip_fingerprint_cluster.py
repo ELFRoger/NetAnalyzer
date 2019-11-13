@@ -6,8 +6,8 @@ sys.path.append('../')
 from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import Birch
-import joblib
 from sklearn import metrics
+import joblib
 import libs.common
 import libs.logger
 import libs.db
@@ -15,6 +15,7 @@ import config
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import numpy as np
+import csv
 import clusters.cosion_kmeans
 import scipy.sparse
 
@@ -25,42 +26,49 @@ def _init():
 
 
 def get_feature():
-    filePath = "responseData.csv"
+    filePath = "fingerprint.csv"
+    feature_arr = np.loadtxt(filePath, usecols=np.arange(3, 9), delimiter=",", skiprows=1)[:200000]
     #处理csv文件  usecils为你想操作的列  skiprows为你想跳过的行 =1为跳过第一行
-    feature_arr = np.loadtxt(filePath, usecols=np.arange(0, 41), delimiter=",", skiprows=1)[:100000]
 
     return feature_arr
 
 
 def kmeans_classer():
 
-    # 需要进行聚类的文本集
+    # 需要进行聚类的数据集
     data = get_feature()
     libs.logger.log(data)
     libs.logger.log('k-means begining......')
-    num_clusters = 50
+    num_clusters = 300
     sse = []
     #手肘法，选k
-    for clust in range(100,101):
+    for clust in range(300,301):
         #clust = 100*clust
         libs.logger.log('clust ['+str(clust)+'] is begining.....')
         km_cluster = KMeans(n_clusters=clust, max_iter=100, n_init=40,
-                            init='k-means++', n_jobs=5)
+                            init='k-means++', n_jobs=3)
         km_cluster.fit(data)
-        #store model
-        joblib.dump(km_cluster, config.MODEL_PATH + 'response_km_cluster_fit_result.pkl')
+        # store model
+        joblib.dump(km_cluster, config.MODEL_PATH + 'fingerprint_km_cluster_fit_result.pkl')
+
         result = km_cluster.predict(data)
         sse.append(km_cluster.inertia_)
         libs.logger.log('clust [' + str(clust) + '] finish')
         libs.logger.log('clust ['+str(clust)+'] sse: ' + str(km_cluster.inertia_))
-        f = open('response_all_no_length' + str(clust) +'.txt', 'w')
-        for i in range(len(result)):
-            info = str(result[i]) + '\n'
-            f.write(info)
-        f.close()
 
+        print("Predicting result: ", result)
+        result_ = list(result)
+        result_.insert(0,'k-means-'+str(clust))
+        print(result_)
+        with open('fingerprint.csv') as csvin:
+            readfile = csv.reader(csvin, delimiter=',')
+            with open('fingerprint_k-means_20w_300'+str(clust)+'.csv', 'w') as csvout:
+                writefile = csv.writer(csvout, delimiter=',', lineterminator='\n')
+                for row, res in zip(readfile, result_):
+                    row.extend([res])
+                    writefile.writerow(row)
         '''
-                6、可视化
+        6、可视化
         '''
         # 使用T-SNE算法，对权重进行降维，准确度比PCA算法高，但是耗时长
         tsne = TSNE(n_components=2)
@@ -78,35 +86,36 @@ def kmeans_classer():
         plt.scatter(x, y, c=km_cluster.labels_, marker="x")
         plt.xticks(())
         plt.yticks(())
-        # plt.show()
-        plt.savefig('./sample_'+str(clust)+'.png', aspect=1)
+        plt.show()
+        plt.savefig('./sample.png', aspect=1)
 
-    print("Predicting result: ", result)
-
-
-
-    '''
-    '''
-
-    # print(sse)
-    # sse = [219456.88241477526, 210344.6742609666, 202510.30251572074, 193877.9982028553, 190193.06528536972, 185167.62407510882, 181378.35124433014, 176109.8874959115, 173725.72286034783, 169918.22260482085, 163231.54861425093, 162948.43114660977, 158810.5280173204, 155072.52220775714, 154264.30686423107, 151203.47277052913, 148986.94957191622, 145565.20444679252, 143292.76061348701, 141897.00501520524]
-    # X = range(50,250,10)
-    # X = range(100,1000,100)
-    # plt.xlabel('k')
-    # plt.ylabel('SSE')
-    # plt.plot(X,sse,'o-')
-    # plt.savefig('./sse.png')
-    # plt.show()
-    '''
+    
+'''
+    print(sse)
+    sse = [219456.88241477526, 210344.6742609666, 202510.30251572074, 193877.9982028553, 190193.06528536972, 185167.62407510882, 181378.35124433014, 176109.8874959115, 173725.72286034783, 169918.22260482085, 163231.54861425093, 162948.43114660977, 158810.5280173204, 155072.52220775714, 154264.30686423107, 151203.47277052913, 148986.94957191622, 145565.20444679252, 143292.76061348701, 141897.00501520524]
+    X = range(50,250,10)
+    X = range(100,1000,100)
+    plt.xlabel('k')
+    plt.ylabel('SSE')
+    plt.plot(X,sse,'o-')
+    plt.savefig('./sse.png')
+    plt.show()
+    
     n_clusters: 指定K的值
     max_iter: 对于单次初始值计算的最大迭代次数
     n_init: 重新选择初始值的次数
     init: 制定初始值选择的算法
-    n_jobs: 进程个数，为-1的时候是指默认跑满CPU
+    n_jobs: 进程个数,为-1的时候是指默认跑满CPU
     注意，这个对于单个初始值的计算始终只会使用单进程计算，
     并行计算只是针对与不同初始值的计算。比如n_init=10，n_jobs=40, 
     服务器上面有20个CPU可以开40个进程，最终只会开10个进程
     '''
+
+    #joblib.dump(tfidf_vectorizer, 'tfidf_fit_result.pkl')
+    #joblib.dump(km_cluster, 'km_cluster_fit_result.pkl')
+    #程序下一次则可以直接load
+    #tfidf_vectorizer = joblib.load('tfidf_fit_result.pkl')
+    #km_cluster = joblib.load('km_cluster_fit_result.pkl')
 
 def cosion_kmeans():
     n_clust = 300
@@ -116,6 +125,8 @@ def cosion_kmeans():
     # 需要进行聚类的数据集
     data = get_feature()
     matrix_data = scipy.sparse.csr_matrix(data)
+    print(type(data))
+    print(type(matrix_data))
     #log
     libs.logger.log('cosion k-means begining......'+str(n_clust))
     #fit and predict
@@ -123,18 +134,42 @@ def cosion_kmeans():
     result = cosion_cluster.predict(matrix_data)
 
     #store model
-    joblib.dump(cosion_cluster, config.MODEL_PATH + 'response__cosion_km_cluster_fit_result.pkl')
+    joblib.dump(cosion_cluster, config.MODEL_PATH + 'fingerprint_cosion_km_cluster_fit_result.pkl')
     libs.logger.log('cosion k-means finished')
 
     print("Predicting result: ", result)
     result_ = list(result)
     result_.insert(0, 'k-means-' + str(n_clust))
     print(result_)
-    f = open('response_all_no_length' + str(n_clust) + '.txt', 'w')
-    for i in range(len(result)):
-        info = str(result[i]) + '\n'
-        f.write(info)
-    f.close()
+    with open('fingerprint.csv') as csvin:
+        readfile = csv.reader(csvin, delimiter=',')
+        with open('fingerprint_cosion_k-means_20w_' + str(n_clust) + '.csv', 'w') as csvout:
+            writefile = csv.writer(csvout, delimiter=',', lineterminator='\n')
+            for row, res in zip(readfile, result_):
+                row.extend([res])
+                writefile.writerow(row)
+    '''
+    6、可视化
+    '''
+    # 使用T-SNE算法，对权重进行降维，准确度比PCA算法高，但是耗时长
+    tsne = TSNE(n_components=2)
+    decomposition_data = tsne.fit_transform(data)
+
+    x = []
+    y = []
+
+    for i in decomposition_data:
+        x.append(i[0])
+        y.append(i[1])
+
+    fig = plt.figure(figsize=(10, 10))
+    ax = plt.axes()
+    plt.scatter(x, y, c=cosion_cluster.labels_, marker="x")
+    plt.xticks(())
+    plt.yticks(())
+    plt.show()
+    plt.savefig('./cosion_sample.png', aspect=1)
+
 
 
 def hierarchical_classer():
@@ -152,10 +187,10 @@ def hierarchical_classer():
         agglomerative_cluster = AgglomerativeClustering(n_clusters=clust, memory=None, connectivity=None, affinity='l1',
                                                         compute_full_tree='auto', linkage='average', )
         result = agglomerative_cluster.fit_predict(data)
-        #sse.append(agglomerative_cluster.inertia_)
+        # store model
+        joblib.dump(agglomerative_cluster, config.MODEL_PATH + 'fingerprint_hier_cluster_fit_result.pkl')
 
-        #store model
-        joblib.dump(agglomerative_cluster, config.MODEL_PATH + 'response_hier_cluster_fit_result.pkl')
+        #sse.append(agglomerative_cluster.inertia_)
 
         f = open('response_hierarchical_1w_' + str(clust) + '.txt', 'w')
         for i in range(len(result)):
@@ -177,8 +212,8 @@ def birch_classer():
         birch_cluster = Birch(n_clusters=clust, )
         result = birch_cluster.fit_predict(data)
 
-        #store model
-        joblib.dump(birch_cluster, config.MODEL_PATH + 'response_birch_cluster_fit_result.pkl')
+        # store model
+        joblib.dump(birch_cluster, config.MODEL_PATH + 'fingerprint_birch_cluster_fit_result.pkl')
 
         calinski_harabasz_ccore = metrics.calinski_harabaz_score(data, result)
 
@@ -193,8 +228,7 @@ def birch_classer():
         libs.logger.log(result)
 
 
-
-def response_do_clust(model):
+def tcpip_fingerprint_do_clust(model):
     _init()
     if model == 'k-means':
         kmeans_classer()
@@ -205,6 +239,9 @@ def response_do_clust(model):
     elif model == 'birch':
         birch_classer()
     else:
-        libs.logger.log('response_cluster no [%s] type cluster'.format(model))
+        libs.logger.log('fingerprint_cluster no [%s] type cluster'.format(model))
 
     return
+
+
+tcpip_fingerprint_do_clust('k-means')

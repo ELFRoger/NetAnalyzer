@@ -5,7 +5,13 @@ import libs.common
 import libs.db
 import libs.logger
 
+def _init():
+    libs.common._init()
+    libs.db.db_cursor_init()
+
+
 def update_originalData(http_list):
+    _init()
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
 
@@ -62,6 +68,7 @@ def update_originalData(http_list):
 
 
 def update_fingerprintData(fingerprint_list):
+    _init()
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
 
@@ -98,6 +105,7 @@ def update_fingerprintData(fingerprint_list):
 
 
 def request_filter():
+    _init()
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
 
@@ -123,7 +131,7 @@ def response_filter():
 
 
 def select_all_UA(num):
-
+    _init()
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
 
@@ -150,6 +158,7 @@ def select_all_UA(num):
 
 
 def select_all_response_header():
+    _init()
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
 
@@ -158,23 +167,44 @@ def select_all_response_header():
     db_cursor.execute(sql_statement)
     db_conn.commit()
     res = db_cursor.fetchall()
+
+    counter = 0
     header_list = []
     for item in res:
         header = json.loads(item[1])
-        if 'date' in header.keys():
-            header.pop('date')
+        #if 'date' in header.keys():
+        #    header.pop('date')
         temp = {}
+        feature = ''
+        if 'server' in header.keys():
+            if type(header['server']) == list:
+                #print(header['server'])
+                header['server'] = str(header['server'])
+            feature += 'server:' + header['server']
+        if 'www-authenticate' in header.keys():
+            if type(header['www-authenticate']) == list:
+                #print(header['www-authenticate'])
+                header['www-authenticate'] = str(header['www-authenticate'])
+            feature += 'www-authenticate:' + header['www-authenticate']
+        if 'x-powered-by' in header.keys():
+            if type(header['x-powered-by']) == list:
+                #print(header['x-powered-by'])
+                header['x-powered-by'] = str(header['x-powered-by'])
+            feature += 'x-powered-by:' + header['x-powered-by']
         temp['ip'] = item[0]
-        temp['header'] = str(header).replace('\'','').replace('{','').replace('}','')
+        temp['header'] = feature
         if temp['header']:
             header_list.append(temp)
+            counter += 1
         else:
             print(item)
-
+    libs.logger.log('all item : %d' % (len(res)))
+    libs.logger.log('filte item : %d' % (counter))
     return header_list
 
 
 def select_all_response_info():
+    _init()
     db_cursor = libs.common.get_value('db_cursor')
     db_conn = libs.common.get_value('db_conn')
 
