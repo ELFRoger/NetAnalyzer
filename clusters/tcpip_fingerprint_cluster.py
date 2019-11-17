@@ -27,7 +27,7 @@ def _init():
 
 def get_feature():
     filePath = "fingerprint.csv"
-    feature_arr = np.loadtxt(filePath, usecols=np.arange(3, 9), delimiter=",", skiprows=1)[:200000]
+    feature_arr = np.loadtxt(filePath, usecols=np.arange(3, 9), delimiter=",", skiprows=1)
     #处理csv文件  usecils为你想操作的列  skiprows为你想跳过的行 =1为跳过第一行
 
     return feature_arr
@@ -42,14 +42,14 @@ def kmeans_classer():
     num_clusters = 300
     sse = []
     #手肘法，选k
-    for clust in range(300,301):
+    for clust in range(200,500,100):
         #clust = 100*clust
         libs.logger.log('clust ['+str(clust)+'] is begining.....')
         km_cluster = KMeans(n_clusters=clust, max_iter=100, n_init=40,
                             init='k-means++', n_jobs=3)
         km_cluster.fit(data)
         # store model
-        joblib.dump(km_cluster, config.MODEL_PATH + 'fingerprint_km_cluster_fit_result.pkl')
+        joblib.dump(km_cluster, config.MODEL_PATH + str(clust)+'fingerprint_km_cluster_all_fit_result.pkl')
 
         result = km_cluster.predict(data)
         sse.append(km_cluster.inertia_)
@@ -62,14 +62,14 @@ def kmeans_classer():
         print(result_)
         with open('fingerprint.csv') as csvin:
             readfile = csv.reader(csvin, delimiter=',')
-            with open('fingerprint_k-means_20w_300'+str(clust)+'.csv', 'w') as csvout:
+            with open('fingerprint_k-means_all_n'+str(clust)+'.csv', 'w') as csvout:
                 writefile = csv.writer(csvout, delimiter=',', lineterminator='\n')
                 for row, res in zip(readfile, result_):
                     row.extend([res])
                     writefile.writerow(row)
         '''
         6、可视化
-        '''
+        
         # 使用T-SNE算法，对权重进行降维，准确度比PCA算法高，但是耗时长
         tsne = TSNE(n_components=2)
         decomposition_data = tsne.fit_transform(data)
@@ -90,7 +90,7 @@ def kmeans_classer():
         plt.savefig('./sample.png', aspect=1)
 
     
-'''
+
     print(sse)
     sse = [219456.88241477526, 210344.6742609666, 202510.30251572074, 193877.9982028553, 190193.06528536972, 185167.62407510882, 181378.35124433014, 176109.8874959115, 173725.72286034783, 169918.22260482085, 163231.54861425093, 162948.43114660977, 158810.5280173204, 155072.52220775714, 154264.30686423107, 151203.47277052913, 148986.94957191622, 145565.20444679252, 143292.76061348701, 141897.00501520524]
     X = range(50,250,10)
@@ -243,5 +243,5 @@ def tcpip_fingerprint_do_clust(model):
 
     return
 
-
-tcpip_fingerprint_do_clust('k-means')
+if __name__ == '__main__':
+    tcpip_fingerprint_do_clust('k-means')

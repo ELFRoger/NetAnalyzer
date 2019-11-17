@@ -53,9 +53,25 @@ create table TCPIP_FINGERPRINT(
     ttl varchar(20) NOT NULL,               # log the ttl of syn packet
     df varchar(20) NOT NULL,                # log the df of syn packet
     rst varchar(20) NOT NULL,               # log the rst of syn packet
-    mss varchar(20) NOT NULL,               # log the mss of syn packet
+    mss varchar(20) NOT NULL                # log the mss of syn packet
 )DEFAULT CHARSET=utf8mb4  COLLATE utf8mb4_general_ci;
 
+
+DROP table IF EXISTS TCPIP_SYN_FINGERPRINT;
+create table TCPIP_SYN_FINGERPRINT(
+    id INT PRIMARY KEY AUTO_INCREMENT,      # serial number for no request
+    time varchar(100) NOT NULL,             # log the time
+    src varchar(20) NOT NULL,               # log the source of this packet
+    src_port varchar(20) NOT NULL,          # log the source port of this packet
+    syn_len varchar(20) NOT NULL,           # syn packet length
+    win varchar(20) NOT NULL,               # log the win in syn packet
+    ttl varchar(20) NOT NULL,               # log the ttl of syn packet
+    df varchar(20) NOT NULL,                # log the df of syn packet
+    rst varchar(20) NOT NULL,               # log the rst of syn packet
+    mss varchar(20) NOT NULL,               # log the mss of syn packet
+    class int,                              # log the class by cluster
+    tags varchar(100)                       # taggging for class
+)DEFAULT CHARSET=utf8mb4  COLLATE utf8mb4_general_ci;
 
 
 

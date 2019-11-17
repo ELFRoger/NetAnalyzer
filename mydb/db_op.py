@@ -86,7 +86,7 @@ def update_fingerprintData(fingerprint_list):
                         'WHERE NOT EXISTS'
                         '(SELECT * FROM http_raw_data WHERE time=%s AND src=%s AND dst=%s LIMIT 1)')
         '''
-        sql_statement = ('INSERT INTO tcpip_fingerprint'
+        sql_statement = ('INSERT INTO tcpip_syn_fingerprint'
                         '(`time`, `src`, `src_port`,`syn_len`, `win`, `ttl`, `df`, `rst`, `mss` )'
                         'VALUE (%s, %s, %s, %s, %s, %s, %s, %s, %s)')
 

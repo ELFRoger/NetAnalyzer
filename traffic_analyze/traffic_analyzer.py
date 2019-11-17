@@ -67,7 +67,7 @@ def tcp_ip_fingerprint_into_csv(pcapFolder):
     writer.writerow(first_row)  # 写入列的名称
     i = 0
     for file in file_list:
-        if i == 11:
+        if i == 21:
             break
         libs.logger.log(pcapFolder + '\\' + file + ' is analyzing.....')
         fingerprint_list = dpkt_tcpip_fingerprint(pcapFolder + '\\' + file)
@@ -80,4 +80,4 @@ def tcp_ip_fingerprint_into_csv(pcapFolder):
 
 if __name__ == '__main__':
     _init()
-    tcp_ip_fingerprint_into_csv('G:\\traffic_data\\divide')
+    tcp_ip_fingerprint_analyze_by_dpkt('G:\\traffic_data\\divide')

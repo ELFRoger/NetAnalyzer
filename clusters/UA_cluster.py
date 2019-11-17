@@ -215,9 +215,10 @@ def ua_do_clust(model):
         libs.logger.log('ua_cluster no [%s] type cluster, we has k-means cosion_k-means DBScan type'.format(model))
     return
 
-_init()
-ip_list, original_info = get_UA()
-kmeans_classer(original_info, ip_list)
+if __name__ == '__main__':
+    _init()
+    ip_list, original_info = get_UA()
+    kmeans_classer(original_info, ip_list)
 
 '''
 

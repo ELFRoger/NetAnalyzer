@@ -129,7 +129,7 @@ def _tcp_ip_fingerprint(filename):
         ip = eth.data
         tcp = ip.data
         if isinstance(ip.data, dpkt.tcp.TCP):
-            if (tcp.flags & dpkt.tcp.TH_SYN):
+            if (tcp.flags & dpkt.tcp.TH_SYN) and not (tcp.flags & dpkt.tcp.TH_ACK):
                 syn_len = len(ip)
                 win = tcp.win
                 ttl = ip.ttl

@@ -209,4 +209,6 @@ def web_fingerprint_do_clust(model):
 
     return
 
-web_fingerprint_do_clust('k-means')
+
+if __name__ == '__main__':
+    web_fingerprint_do_clust('k-means')
