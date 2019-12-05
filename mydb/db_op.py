@@ -4,6 +4,7 @@ import json
 import libs.common
 import libs.db
 import libs.logger
+import config
 
 def _init():
     libs.common._init()
@@ -197,7 +198,8 @@ def select_all_response_header():
             header_list.append(temp)
             counter += 1
         else:
-            print(item)
+            #print(item)
+            pass
     libs.logger.log('all item : %d' % (len(res)))
     libs.logger.log('filte item : %d' % (counter))
     return header_list
@@ -217,8 +219,266 @@ def select_all_response_info():
     return res
 
 
+#获取聚类结果对应的特征
+def get_ua_by_clusterNum(num, cluster_type):
+    _init()
+    db_cursor = libs.common.get_value('db_cursor')
+    db_conn = libs.common.get_value('db_conn')
+
+    if cluster_type == 'kmeans':
+        sql_statement = ('select ua from ua_result where kmeans = %s' %num)
+    elif cluster_type == 'cosion':
+        sql_statement = ('select ua from ua_result where cosion = %s' % num)
+    else:
+        libs.logger.log('no such type cluster: %s' %cluster_type)
+        return
+    db_cursor.execute(sql_statement)
+    db_conn.commit()
+    res = db_cursor.fetchall()
+    ua_dic = {}
+    for item in res:
+        if item[0] in ua_dic.keys():
+            ua_dic[item[0]] += 1
+        else:
+            ua_dic[item[0]] = 1
+    ua_dic_sorted = sorted(ua_dic.items(), key=lambda x: x[1],reverse=True)
+    return ua_dic_sorted,len(res)
+
+
+def get_resp_banner_by_clusterNum(num, cluster_type):
+    _init()
+    db_cursor = libs.common.get_value('db_cursor')
+    db_conn = libs.common.get_value('db_conn')
+
+    if cluster_type == 'kmeans':
+        sql_statement = ('select banner from response_banner_result where kmeans = %s' %num)
+    elif cluster_type == 'cosion':
+        sql_statement = ('select banner from response_banner_result where cosion = %s' % num)
+    else:
+        libs.logger.log('no such type cluster: %s' %cluster_type)
+        return
+    db_cursor.execute(sql_statement)
+    db_conn.commit()
+    res = db_cursor.fetchall()
+    banner_dic = {}
+    for item in res:
+        if item[0] in banner_dic.keys():
+            banner_dic[item[0]] += 1
+        else:
+            banner_dic[item[0]] = 1
+    resp_banner_dic_sorted = sorted(banner_dic.items(), key=lambda x: x[1],reverse=True)
+    return resp_banner_dic_sorted,len(res)
+
+
+def get_web_fingerprint_by_clusterNum(num, cluster_type):
+    _init()
+    db_cursor = libs.common.get_value('db_cursor')
+    db_conn = libs.common.get_value('db_conn')
+
+    if cluster_type == 'kmeans':
+        sql_statement = ('select filter_headers from web_fingerprint_result_10w_3000 where kmeans = %s' %num)
+    elif cluster_type == 'cosion':
+        sql_statement = ('select filter_headers from web_fingerprint_result_10w_3000 where cosion = %s' % num)
+    else:
+        libs.logger.log('no such type cluster: %s' %cluster_type)
+        return
+    db_cursor.execute(sql_statement)
+    db_conn.commit()
+    res = db_cursor.fetchall()
+    banner_dic = {}
+    for item in res:
+        if item[0] in banner_dic.keys():
+            banner_dic[item[0]] += 1
+        else:
+            banner_dic[item[0]] = 1
+    web_fingerprint_dic_sorted = sorted(banner_dic.items(), key=lambda x: x[1],reverse=True)
+    return web_fingerprint_dic_sorted,len(res)
+
+
+def get_tcpip_fingerprint_by_clusterNum(cluster_type):
+    _init()
+    db_cursor = libs.common.get_value('db_cursor')
+    db_conn = libs.common.get_value('db_conn')
+
+    if cluster_type == 'kmeans':
+        sql_statement = ('select km_class,syn_len,win,ttl,df,rst,mss from tcpip_feature_number_max_all_km ')
+    elif cluster_type == 'cosion':
+        sql_statement = (
+        'select cosion_km_class,syn_len,win,ttl,df,rst,mss from tcpip_feature_number_max_all_cosion_km ')
+    else:
+        libs.logger.log('no such type cluster: %s' %cluster_type)
+        return
+    db_cursor.execute(sql_statement)
+    db_conn.commit()
+    res = db_cursor.fetchall()
+    fingerprint_list = [list(x) for x in res]
+
+
+    return fingerprint_list
+
+
+#tags_save_to_db
+def save_tag(feature_type,cluster_type,tag_dict):
+    _init()
+    db_cursor = libs.common.get_value('db_cursor')
+    db_conn = libs.common.get_value('db_conn')
+
+    if feature_type in config.FEATRUE_TYPE:
+        sql_statement = ('INSERT INTO cluster_result'
+                         '(`cluster_type`, `cluster_num`, `cluster_tag`, `feature_type`) '
+                         'VALUE (%s, %s, %s, %s)')
+        param = []
+        for clusterNum,tag in tag_dict.items():
+            param.append((cluster_type, clusterNum, tag, feature_type))
+        db_cursor.executemany(sql_statement, param)
+        db_conn.commit()
+        libs.logger.log('[%s / %s] insert db successfully' % (feature_type, cluster_type))
+
+    else:
+        libs.logger.log('[error] %s is not a feature type' % feature_type)
+        return
+
+    return
+
+
+#获取tags
+def get_all_cluster_tags(cluster_type = 'cosion'):
+    _init()
+    db_cursor = libs.common.get_value('db_cursor')
+    db_conn = libs.common.get_value('db_conn')
+
+    sql_statement = ('select feature_type,cluster_num,cluster_tag '
+                     'from cluster_result '
+                     'WHERE cluster_type = %s')
+
+    db_cursor.execute(sql_statement, cluster_type)
+    db_conn.commit()
+    res = db_cursor.fetchall()
+    tag_dict = {}
+    tag_dict['ua_banner'] = {}
+    tag_dict['response_banner'] = {}
+    tag_dict['web_fingerprint'] = {}
+    tag_dict['tcpip_fingerprint'] = {}
+    for item in res:
+        tag_dict[item[0]][item[1]] = item[2]
+
+
+    sql_statement = ('select feature_type,cluster_num,cluster_tag '
+                     'from cluster_result '
+                     'WHERE cluster_type = %s and feature_type = %s')
+
+    db_cursor.execute(sql_statement, ('kmeans', 'web_fingerprint'))
+    db_conn.commit()
+    res = db_cursor.fetchall()
+    for item in res:
+        tag_dict[item[0]][item[1]] = item[2]
+
+    return tag_dict
+
+
+def deal_web_fingerprint():
+    _init()
+    db_cursor = libs.common.get_value('db_cursor')
+    db_conn = libs.common.get_value('db_conn')
+    sql_statement = ('select src, headers, cosion, kmeans, id '
+                     'from web_fingerprint_result_10w_3000 ')
+    db_cursor.execute(sql_statement)
+    db_conn.commit()
+    res = db_cursor.fetchall()
+
+    counter = 0
+
+    param = []
+    for item in res:
+        header = json.loads(item[1])
+        feature = ''
+        if 'server' in header.keys():
+            if type(header['server']) == list:
+                # print(header['server'])
+                header['server'] = str(header['server'])
+            feature += 'server:' + header['server']
+        if ' www-authenticate' in header.keys():
+            if type(header['www-authenticate']) == list:
+                # print(header['www-authenticate'])
+                header['www-authenticate'] = str(header['www-authenticate'])
+            feature += ' www-authenticate:' + header['www-authenticate']
+        if 'x-powered-by' in header.keys():
+            if type(header['x-powered-by']) == list:
+                # print(header['x-powered-by'])
+                header['x-powered-by'] = str(header['x-powered-by'])
+            feature += ' x-powered-by:' + header['x-powered-by']
+        if 'via' in header.keys():
+            if type(header['via']) == list:
+                # print(header['x-powered-by'])
+                header['via'] = str(header['via'])
+            feature += ' via:' + header['via']
+        info = [feature, item[4]]
+        param.append(info)
+
+    libs.logger.log('all item : %d' % (len(res)))
+    libs.logger.log('filte item : %d' % (counter))
+    sql_statement = ('UPDATE web_fingerprint_result_10w_3000 '
+                     'SET filter_headers = %s '
+                     'WHERE id = %s')
+    db_cursor.executemany(sql_statement, param)
+    db_conn.commit()
+
+    return
+
+
+def test():
+    _init()
+    db_cursor = libs.common.get_value('db_cursor')
+    db_conn = libs.common.get_value('db_conn')
+    params = []
+    with open('C:/Users/yuge/Desktop/20000.txt', 'r') as file:
+        header = file.readline()
+        header = file.readline()
+        header = file.readline()
+        line = file.readline()
+
+        while line != '':
+            ua_tag = ''
+            resp_tag = ''
+            web_fp_tag = ''
+            tcpip_fp_tag = ''
+            info = line.split('] ')[1].split('\n')[0]
+            info_dict = eval(info)
+            ok = False
+            if 'ua_result' in info_dict.keys():
+                if info_dict['ua_result']['tag'] == '????':
+                    if info_dict['ua_result']['result'] == '0':
+                        ua_tag = info_dict['ua_result']['feature']
+                else:
+                    ua_tag = info_dict['ua_result']['tag']
+            if 'response_banner' in info_dict.keys():
+                if info_dict['response_banner']['tag'] != '????':
+                    resp_tag = info_dict['response_banner']['tag']
+            if 'tcpip_fingerprint' in info_dict.keys():
+                if info_dict['tcpip_fingerprint']['tag'] != '????':
+                    tcpip_fp_tag = info_dict['tcpip_fingerprint']['tag']
+            if 'web_fingerprint' in info_dict.keys():
+                if info_dict['web_fingerprint']['tag'] != '????':
+                    web_fp_tag = info_dict['web_fingerprint']['tag']
+            line = file.readline()
+
+            info = 'ua_tag:' + ua_tag + ' resp_tag:' + resp_tag + ' web_fp_tag:' + web_fp_tag + ' tcpip_fp_tag:' + tcpip_fp_tag
+            ip = info_dict['ip']
+            params.append((ip, info))
+
+    sql_statement = ('INSERT INTO resource_infomation'
+                     '(`ip`, `other_info`) '
+                     'VALUE (%s, %s)')
+    db_cursor.executemany(sql_statement, params)
+    db_conn.commit()
+
+
 if __name__ == '__main__':
     libs.common._init()
     libs.db.db_cursor_init()
 
-    print(select_all_response_header())
+    #print(select_all_response_header())
+    #print(get_tcpip_fingerprint_by_clusterNum(0))
+    #get_all_cluster_tags()
+    #deal_web_fingerprint()
+    test()

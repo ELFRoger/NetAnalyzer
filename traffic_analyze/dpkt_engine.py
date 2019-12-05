@@ -33,7 +33,10 @@ def inet_to_str(inet):
 
 def _http_filter(filename):
     f = open(filename, 'rb')
-    pcap = dpkt.pcap.Reader(f)
+    try:
+        pcap = dpkt.pcap.Reader(f)
+    except:
+        pcap = dpkt.pcapng.Reader(f)
 
     http_list = []
     # For each packet in the pcap process the contents
@@ -130,6 +133,7 @@ def _tcp_ip_fingerprint(filename):
         tcp = ip.data
         if isinstance(ip.data, dpkt.tcp.TCP):
             if (tcp.flags & dpkt.tcp.TH_SYN) and not (tcp.flags & dpkt.tcp.TH_ACK):
+            #if (tcp.flags & dpkt.tcp.TH_SYN):
                 syn_len = len(ip)
                 win = tcp.win
                 ttl = ip.ttl
@@ -155,4 +159,5 @@ def dpkt_tcpip_fingerprint(filename):
 
 
 if __name__ == '__main__':
-    dpkt_http('')
+    #dpkt_http('')
+    print(_tcp_ip_fingerprint('../test.pcap'))

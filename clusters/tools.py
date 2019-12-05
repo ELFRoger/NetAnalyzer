@@ -1,11 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from mydb.db_op import select_all_response_info
+import sys
+sys.path.append('../')
+
+from mydb.db_op import select_all_response_info,get_ua_by_clusterNum,get_resp_banner_by_clusterNum
+from mydb.db_op import get_tcpip_fingerprint_by_clusterNum,save_tag
+
 import csv
 import config
 import json
 from libs import common
 from libs import db
+import re
+import config
+
 
 
 def _init():
@@ -60,9 +68,5 @@ def save_response_feature_to_csv():
 
     csvFile.close()
 
-
-
-_init()
-save_response_feature_to_csv()
 
 
